@@ -36,11 +36,9 @@ fn main() {
 	cmd := os.args[2] or { 'status' }
 	match cmd {
 		'status' {
-			build_btarget()
 			cmd_status(htarget)
 		}
 		'install' {
-			build_btarget()
 			cmd_install(htarget)
 		}
 		'remove' {
@@ -79,6 +77,10 @@ fn cmd_remove(htarget string) {
 // Returns true if binary compiled from cmd/tools/git_pre_commit_hook.vsh and
 // pre-commit Git hook are identical.
 fn report_status(htarget string, show_instructions bool) bool {
+	if !os.exists(hbtarget) || !os.is_executable(hbtarget) {
+		build_btarget()
+	}
+
 	ostat := os.stat(horiginal) or { os.Stat{} }
 	bstat := os.stat(hbtarget) or { os.Stat{} }
 	tstat := os.stat(htarget) or { os.Stat{} }
