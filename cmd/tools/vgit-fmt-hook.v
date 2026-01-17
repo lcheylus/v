@@ -4,7 +4,7 @@ import crypto.sha256
 const vexe = os.getenv_opt('VEXE') or { panic('missing VEXE env variable') }
 const vroot = os.to_slash(os.real_path(os.dir(vexe)))
 const horiginal = os.to_slash(os.join_path(vroot, 'cmd/tools/git_pre_commit_hook.vsh'))
-const hbtarget = os.to_slash(os.join_path(os.temp_dir(), 'git_pre_commit_hook'))
+const hbtarget = os.to_slash(os.join_path(os.vtmp_dir(), 'git_pre_commit_hook'))
 
 fn get_hook_target(git_folder string) string {
 	return os.to_slash(os.join_path(git_folder, 'hooks/pre-commit'))
