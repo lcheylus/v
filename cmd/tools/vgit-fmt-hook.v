@@ -17,6 +17,8 @@ fn build_btarget() {
 		if res.exit_code != 0 {
 			println('Error when building ${hbtarget} - error = ${res.output}')
 			exit(1)
+		} else {
+			println('Build ${hbtarget} done')
 		}
 	} else {
 		println('Unable to find ${horiginal} file')
