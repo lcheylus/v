@@ -13,7 +13,11 @@ fn get_hook_target(git_folder string) string {
 // Build binary for Git hook from cmd/tools/git_pre_commit_hook.vsh script
 fn build_btarget() {
 	if os.exists(horiginal) && os.is_file(horiginal) {
-		os.execute_or_exit('${vexe} -skip-running -o ${hbtarget} ${horiginal}')
+		res := os.execute('${vexe} -skip-running -o ${hbtarget} ${horiginal}')
+		if res.exit_code != 0 {
+			println('Error when building ${hbtarget} - error = ${res.output}')
+			exit(1)
+		}
 	} else {
 		println('Unable to find ${horiginal} file')
 		exit(1)
