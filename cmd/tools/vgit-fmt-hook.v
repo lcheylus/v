@@ -87,10 +87,18 @@ fn report_status(htarget string, show_instructions bool) bool {
 	} else {
 		println('>   CURRENT git repo pre-commit hook: missing ${htarget}')
 	}
+	// TODO: add error
 	if os.exists(horiginal) && os.is_file(horiginal) {
 		println('> Main V repo pre-commit hook script: size: ${ostat.size:6} bytes, ${horiginal}')
 	}
-	if os.exists(hbtarget) && os.is_file(hbtarget) {
+	// if os.exists(hbtarget) && os.is_file(hbtarget) {
+	if !os.exists(hbtarget) {
+		println('Error no ${hbtarget} file')
+		return false
+	} else if !os.is_executable(hbtarget) {
+		println('Error ${hbtarget} not executable')
+		return false
+	} else {
 		println('> Main V repo pre-commit hook binary: size: ${bstat.size:6} bytes, sha256: ${bhash}, ${hbtarget}')
 	}
 	if bhash == thash {
