@@ -15,7 +15,7 @@ import term
 //
 // You could also use `vgit-fmt-hook` tool to install/update/remove and get
 // status for this hook.
-// This tool copies the git hook VSH script in .git/hooks/pre-commit
+// This tool build a binary from the git hook VSH script and copy it in .git/hooks/pre-commit
 //
 // Note: you can use this command:
 // `git config --bool --add hooks.stopCommitOfNonVfmtedVFiles true`
