@@ -52,7 +52,9 @@ fn cmd_status(htarget string) {
 }
 
 fn cmd_install(htarget string) {
-	report_status(htarget, false)
+	if report_status(htarget, false) {
+		return
+	}
 	println('> Installing the newest version of ${horiginal} over ${htarget} ...')
 	os.cp(hbtarget, htarget) or { err_exit('failed to copy to ${htarget}') }
 	println('> Done.')
@@ -68,7 +70,9 @@ fn cmd_remove(htarget string) {
 	println('> Done.')
 }
 
-fn report_status(htarget string, show_instructions bool) {
+// Returns true if binary compiled from cmd/tools/git_pre_commit_hook.vsh and
+// pre-commit Git hook are identical.
+fn report_status(htarget string, show_instructions bool) bool {
 	ostat := os.stat(horiginal) or { os.Stat{} }
 	bstat := os.stat(hbtarget) or { os.Stat{} }
 	tstat := os.stat(htarget) or { os.Stat{} }
@@ -90,7 +94,7 @@ fn report_status(htarget string, show_instructions bool) {
 		if show_instructions {
 			show_msg_about_removing(htarget)
 		}
-		return
+		return true
 	}
 	println('> Files have different hashes.')
 	if bhash != '' && thash != '' {
@@ -105,6 +109,7 @@ fn report_status(htarget string, show_instructions bool) {
 		println('> with the newest pre-commit formatting script from the main V repo.')
 		show_msg_about_removing(htarget)
 	}
+	return false
 }
 
 fn show_msg_about_removing(htarget string) {
