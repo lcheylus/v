@@ -4,9 +4,20 @@ import crypto.sha256
 const vexe = os.getenv_opt('VEXE') or { panic('missing VEXE env variable') }
 const vroot = os.to_slash(os.real_path(os.dir(vexe)))
 const horiginal = os.to_slash(os.join_path(vroot, 'cmd/tools/git_pre_commit_hook.vsh'))
+const hbtarget = os.to_slash(os.join_path(os.temp_dir(), 'git_pre_commit_hook'))
 
 fn get_hook_target(git_folder string) string {
 	return os.to_slash(os.join_path(git_folder, 'hooks/pre-commit'))
+}
+
+// Build binary for Git hook from cmd/tools/git_pre_commit_hook.vsh script
+fn build_btarget() {
+	if os.exists(horiginal) && os.is_file(horiginal) {
+		os.execute_or_exit('${vexe} -skip-running -o ${hbtarget} ${horiginal}')
+	} else {
+		println('Unable to find ${horiginal} file')
+		exit(1)
+	}
 }
 
 fn main() {
@@ -19,9 +30,11 @@ fn main() {
 	cmd := os.args[2] or { 'status' }
 	match cmd {
 		'status' {
+			build_btarget()
 			cmd_status(htarget)
 		}
 		'install' {
+			build_btarget()
 			cmd_install(htarget)
 		}
 		'remove' {
@@ -41,7 +54,7 @@ fn cmd_status(htarget string) {
 fn cmd_install(htarget string) {
 	report_status(htarget, false)
 	println('> Installing the newest version of ${horiginal} over ${htarget} ...')
-	os.cp(horiginal, htarget) or { err_exit('failed to copy to ${htarget}') }
+	os.cp(hbtarget, htarget) or { err_exit('failed to copy to ${htarget}') }
 	println('> Done.')
 }
 
@@ -57,8 +70,9 @@ fn cmd_remove(htarget string) {
 
 fn report_status(htarget string, show_instructions bool) {
 	ostat := os.stat(horiginal) or { os.Stat{} }
+	bstat := os.stat(hbtarget) or { os.Stat{} }
 	tstat := os.stat(htarget) or { os.Stat{} }
-	ohash := hash_file(horiginal) or { '' }
+	bhash := hash_file(hbtarget) or { '' }
 	thash := hash_file(htarget) or { '' }
 	if os.exists(htarget) && os.is_file(htarget) {
 		println('>   CURRENT git repo pre-commit hook: size: ${tstat.size:6} bytes, sha256: ${thash}, ${htarget}')
@@ -66,9 +80,12 @@ fn report_status(htarget string, show_instructions bool) {
 		println('>   CURRENT git repo pre-commit hook: missing ${htarget}')
 	}
 	if os.exists(horiginal) && os.is_file(horiginal) {
-		println('> Main V repo pre-commit hook script: size: ${ostat.size:6} bytes, sha256: ${ohash}, ${horiginal}')
+		println('> Main V repo pre-commit hook script: size: ${ostat.size:6} bytes, ${horiginal}')
 	}
-	if ohash == thash {
+	if os.exists(hbtarget) && os.is_file(hbtarget) {
+		println('> Main V repo pre-commit hook binary: size: ${bstat.size:6} bytes, sha256: ${bhash}, ${hbtarget}')
+	}
+	if bhash == thash {
 		println('> Both files are exactly the same.')
 		if show_instructions {
 			show_msg_about_removing(htarget)
@@ -76,7 +93,7 @@ fn report_status(htarget string, show_instructions bool) {
 		return
 	}
 	println('> Files have different hashes.')
-	if ohash != '' && thash != '' {
+	if bhash != '' && thash != '' {
 		existing_content := os.read_file(htarget) or { '' }
 		if !existing_content.contains('hooks.stopCommitOfNonVfmtedVFiles') {
 			// both files do exist, but the current git repo hook, is not compatible (an older version of git_pre_commit_hook.vsh):
