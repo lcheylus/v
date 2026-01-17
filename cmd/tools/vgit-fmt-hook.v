@@ -1,6 +1,9 @@
 import os
 import crypto.sha256
 
+// Tempd for debug
+import time
+
 const vexe = os.getenv_opt('VEXE') or { panic('missing VEXE env variable') }
 const vroot = os.to_slash(os.real_path(os.dir(vexe)))
 const horiginal = os.to_slash(os.join_path(vroot, 'cmd/tools/git_pre_commit_hook.vsh'))
@@ -19,6 +22,27 @@ fn build_btarget() {
 			exit(1)
 		} else {
 			println('Build ${hbtarget} done')
+			// DEBUG 'ls -l file'
+			stat := os.stat(hbtarget) or {
+				eprintln('Error: ${err}')
+				return
+			}
+
+			// File type
+			file_type := if os.is_dir(hbtarget) {
+				'd'
+			} else {
+				'-'
+			}
+			// Permissions (Unix-style)
+			perms := stat.get_mode().bitmask()
+			// Size
+			size := stat.size
+			// Modified time
+			mtime := time.unix(stat.mtime)
+			mtime_str := mtime.format_ss()
+
+			println('${file_type}${perms} ${size} ${mtime_str} ${hbtarget}')
 		}
 	} else {
 		println('Unable to find ${horiginal} file')
