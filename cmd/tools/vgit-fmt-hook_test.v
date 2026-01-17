@@ -79,6 +79,10 @@ fn test_run_git_fmt_hook() {
 	eprintln('>>>> ${@FN}')
 	reset_to_start_state()
 	res := os.execute_or_exit('${os.quoted_path(vexe)} git-fmt-hook')
+	$if windows {
+		println('=== Debug test_run_git_fmt_hook on Windows')
+		println('res = ${res}')
+	}
 	assert res.exit_code == 0
 	assert res.output.contains('>   CURRENT git repo pre-commit hook: missing')
 	assert res.output.contains('> Main V repo pre-commit hook script: size:  ')
