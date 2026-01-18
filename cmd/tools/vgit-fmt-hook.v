@@ -23,26 +23,28 @@ fn build_btarget() {
 		} else {
 			println('Build ${hbtarget} done')
 			// DEBUG 'ls -l file'
-			stat := os.stat(hbtarget) or {
-				eprintln('Error: ${err}')
-				return
-			}
+			$if windows {
+				stat := os.stat('${hbtarget}.exe') or {
+					eprintln('Error: ${err}')
+					return
+				}
 
-			// File type
-			file_type := if os.is_dir(hbtarget) {
-				'd'
-			} else {
-				'-'
-			}
-			// Permissions (Unix-style)
-			perms := stat.get_mode().bitmask()
-			// Size
-			size := stat.size
-			// Modified time
-			mtime := time.unix(stat.mtime)
-			mtime_str := mtime.format_ss()
+				// File type
+				file_type := if os.is_dir(hbtarget) {
+					'd'
+				} else {
+					'-'
+				}
+				// Permissions (Unix-style)
+				perms := stat.get_mode().bitmask()
+				// Size
+				size := stat.size
+				// Modified time
+				mtime := time.unix(stat.mtime)
+				mtime_str := mtime.format_ss()
 
-			println('${file_type}${perms} ${size} ${mtime_str} ${hbtarget}')
+				println('${file_type}${perms} ${size} ${mtime_str} ${hbtarget}.exe')
+			}
 		}
 	} else {
 		println('Unable to find ${horiginal} file')
@@ -84,7 +86,11 @@ fn cmd_install(htarget string) {
 		return
 	}
 	println('> Installing the newest version of ${horiginal} over ${htarget} ...')
-	os.cp(hbtarget, htarget) or { err_exit('failed to copy to ${htarget}') }
+	$if windows {
+		os.cp('${hbtarget}.exe', htarget) or { err_exit('failed to copy to ${htarget}') }
+	} $else {
+		os.cp(hbtarget, htarget) or { err_exit('failed to copy to ${htarget}') }
+	}
 	println('> Done.')
 }
 
@@ -101,14 +107,22 @@ fn cmd_remove(htarget string) {
 // Returns true if binary compiled from cmd/tools/git_pre_commit_hook.vsh and
 // pre-commit Git hook are identical.
 fn report_status(htarget string, show_instructions bool) bool {
-	if !os.exists(hbtarget) || !os.is_executable(hbtarget) {
+	mut hbftarget := ''
+	$if windows {
+		hbftarget = hbtarget + '.exe'
+	} $else {
+		hbftarget = hbtarget
+	}
+	if !os.exists(hbftarget) || !os.is_executable(hbftarget) {
 		build_btarget()
 	}
 
 	ostat := os.stat(horiginal) or { os.Stat{} }
-	bstat := os.stat(hbtarget) or { os.Stat{} }
+	// bstat := os.stat(hbtarget) or { os.Stat{} }
+	bstat := os.stat(hbftarget) or { os.Stat{} }
 	tstat := os.stat(htarget) or { os.Stat{} }
-	bhash := hash_file(hbtarget) or { '' }
+	// bhash := hash_file(hbtarget) or { '' }
+	bhash := hash_file(hbftarget) or { '' }
 	thash := hash_file(htarget) or { '' }
 	if os.exists(htarget) && os.is_file(htarget) {
 		println('>   CURRENT git repo pre-commit hook: size: ${tstat.size:6} bytes, sha256: ${thash}, ${htarget}')
@@ -120,11 +134,13 @@ fn report_status(htarget string, show_instructions bool) bool {
 		println('> Main V repo pre-commit hook script: size: ${ostat.size:6} bytes, ${horiginal}')
 	}
 	// if os.exists(hbtarget) && os.is_file(hbtarget) {
-	if !os.exists(hbtarget) {
-		println('Error no ${hbtarget} file')
+	// if !os.exists(hbtarget) {
+	if !os.exists(hbftarget) {
+		println('Error no ${hbftarget} file')
 		return false
-	} else if !os.is_executable(hbtarget) {
-		println('Error ${hbtarget} not executable')
+		// } else if !os.is_executable(hbtarget) {
+	} else if !os.is_executable(hbftarget) {
+		println('Error ${hbftarget} not executable')
 		return false
 	} else {
 		println('> Main V repo pre-commit hook binary: size: ${bstat.size:6} bytes, sha256: ${bhash}, ${hbtarget}')
