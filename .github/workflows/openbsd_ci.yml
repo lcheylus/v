@@ -33,10 +33,10 @@ jobs:
 
       - name: Start OpenBSD VM for tcc
         id: vm-openbsd-tcc
-        uses: cross-platform-actions/action@v1.1.0
+        uses: cross-platform-actions/action@v1.2.0
         with:
           operating_system: openbsd
-          version: '7.8'
+          version: '7.9'
           memory: 4G
           sync_files: runner-to-vm
 
@@ -71,10 +71,10 @@ jobs:
 
       - name: Start OpenBSD VM for clang
         id: vm-openbsd-clang
-        uses: cross-platform-actions/action@v1.1.0
+        uses: cross-platform-actions/action@v1.2.0
         with:
           operating_system: openbsd
-          version: '7.8'
+          version: '7.9'
           memory: 4G
           sync_files: runner-to-vm
 
